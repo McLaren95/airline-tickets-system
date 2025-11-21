@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
+
 class Airplane(models.Model):
     airplane_code = models.CharField(max_length=3, primary_key=True)
     model = models.JSONField()
@@ -57,3 +58,16 @@ class Booking(models.Model):
 
     def __str__(self):
         return self.book_ref
+
+class Ticket(models.Model):
+    ticket_no = models.CharField(max_length=16, primary_key=True)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
+    passenger_id = models.CharField(max_length=64)
+    passenger_name = models.CharField(max_length=255)
+    outbound = models.BooleanField()
+
+    class Meta:
+        db_table = 'tickets'
+
+    def __str__(self):
+        return f"{self.ticket_no} - {self.passenger_name}"
