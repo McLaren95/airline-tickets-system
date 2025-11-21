@@ -42,3 +42,18 @@ class Seat(models.Model):
     class Meta:
         db_table = 'seats'
         unique_together = (('airplane', 'seat_no'),)
+
+    def __str__(self):
+        return f"{self.seat_no} ({self.fare_conditions})"
+
+class Booking(models.Model):
+    book_ref = models.CharField(max_length=6, primary_key=True)
+    book_date = models.DateTimeField()
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        db_table = 'bookings'
+
+    def __str__(self):
+        return self.book_ref
