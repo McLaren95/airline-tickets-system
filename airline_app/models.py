@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
 class Airplane(models.Model):
-    airplane_code = models.CharField(max_length=10, primary_key=True)
+    airplane_code = models.CharField(max_length=3, primary_key=True)
     model = models.JSONField()
     range = models.PositiveIntegerField()
     speed = models.PositiveIntegerField()
@@ -27,3 +27,18 @@ class Airport(models.Model):
 
     class Meta:
         db_table = 'airports_data'
+
+class Seat(models.Model):
+    FARE_CONDITIONS = [
+        ('Economy', 'Economy'),
+        ('Comfort', 'Comfort'),
+        ('Business', 'Business'),
+    ]
+
+    airplane = models.ForeignKey(Airplane, on_delete=models.CASCADE)
+    seat_no = models.CharField(max_length=10)
+    fare_conditions = models.CharField(max_length=20, choices=FARE_CONDITIONS)
+
+    class Meta:
+        db_table = 'seats'
+        unique_together = (('airplane', 'seat_no'),)
