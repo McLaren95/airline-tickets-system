@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.fields import DateTimeRangeField
+from django.core.exceptions import ValidationError
 
 
 class Airplane(models.Model):
@@ -94,3 +95,45 @@ class Route(models.Model):
 
     def __str__(self):
         return f"{self.route_no}: {self.departure_airport} → {self.arrival_airport}"
+
+class Flight(models.Model):
+    SCHEDULED = 'Scheduled'
+    ON_TIME = 'On Time'
+    DELAYED = 'Delayed'
+    BOARDING = 'Boarding'
+    DEPARTED = 'Departed'
+    ARRIVED = 'Arrived'
+    CANCELLED = 'Cancelled'
+
+    STATUS_CHOICES = [
+        (SCHEDULED, 'Scheduled'),
+        (ON_TIME, 'On Time'),
+        (DELAYED, 'Delayed'),
+        (BOARDING, 'Boarding'),
+        (DEPARTED, 'Departed'),
+        (ARRIVED, 'Arrived'),
+        (CANCELLED, 'Cancelled'),
+    ]
+
+    flight_id = models.AutoField(primary_key=True)
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, db_column='route_no', to_field='route_no')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    scheduled_departure = models.DateTimeField()
+    scheduled_arrival = models.DateTimeField()
+    actual_departure = models.DateTimeField(null=True, blank=True)
+    actual_arrival = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.route.route_no} - {self.scheduled_departure.date()}"
+
+    def clean(self):
+        if self.scheduled_arrival <= self.scheduled_departure:
+            raise ValidationError("Scheduled arrival must be after departure.")
+        if self.actual_arrival and (
+            not self.actual_departure or
+            self.actual_arrival <= self.actual_departure
+        ):
+            raise ValidationError("Actual arrival must be after actual departure.")
+
+    class Meta:
+        db_table = 'flights'
