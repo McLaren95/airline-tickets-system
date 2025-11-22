@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.fields import DateTimeRangeField
 from django.core.exceptions import ValidationError
-
+from django.core.validators import MinValueValidator
 
 class Airplane(models.Model):
     airplane_code = models.CharField(max_length=3, primary_key=True)
@@ -137,3 +137,25 @@ class Flight(models.Model):
 
     class Meta:
         db_table = 'flights'
+
+class Segment(models.Model):
+    ECONOMY = 'Economy'
+    COMFORT = 'Comfort'
+    BUSINESS = 'Business'
+    FARE_CONDITIONS_CHOICES = [
+        (ECONOMY, 'Economy'),
+        (COMFORT, 'Comfort'),
+        (BUSINESS, 'Business'),
+    ]
+
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, db_column='ticket_no', to_field='ticket_no')
+    flight = models.ForeignKey(Flight, on_delete=models.CASCADE, db_column='flight_id')
+    fare_conditions = models.CharField(max_length=10, choices=FARE_CONDITIONS_CHOICES)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    class Meta:
+        db_table = 'segments'
+        unique_together = (('ticket', 'flight'),)
+
+    def __str__(self):
+        return f"{self.ticket.ticket_no} - Flight {self.flight.flight_id}"
