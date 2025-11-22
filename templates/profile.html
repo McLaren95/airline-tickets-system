@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Личный кабинет</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h2>Личный кабинет</h2>
+    <p>Добро пожаловать, {{ user.username }}!</p>
+    <p>Ваши бронирования будут отображаться здесь.</p>
+    <a href="{% url 'logout' %}">Выйти</a>
+</body>
+</html>

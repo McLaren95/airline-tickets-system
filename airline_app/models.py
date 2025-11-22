@@ -47,7 +47,7 @@ class Seat(models.Model):
         unique_together = (('airplane', 'seat_no'),)
 
     def __str__(self):
-        return f"{self.seat_no} ({self.fare_conditions})"
+        return f"{self.airplane.airplane_code} - {self.seat_no} ({self.fare_conditions})"
 
 class Booking(models.Model):
     book_ref = models.CharField(max_length=6, primary_key=True)

@@ -117,3 +117,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']  # Добавим папку для с�
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_REDIRECT_URL = '/profile'    # После входа → /profile
+LOGOUT_REDIRECT_URL = '/'          # После выхода → главная
+LOGIN_URL = '/login'               # Если не авторизован → /login
