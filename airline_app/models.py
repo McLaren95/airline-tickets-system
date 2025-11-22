@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import DateTimeRangeField
 
 
 class Airplane(models.Model):
@@ -71,3 +72,25 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"{self.ticket_no} - {self.passenger_name}"
+
+class Route(models.Model):
+    route_no = models.CharField(max_length=64, primary_key=True)
+    validity = DateTimeRangeField()
+    departure_airport = models.ForeignKey(
+        Airport, on_delete=models.CASCADE,
+        related_name='departing_routes'
+    )
+    arrival_airport = models.ForeignKey(
+        Airport, on_delete=models.CASCADE,
+        related_name='arriving_routes'
+    )
+    airplane = models.ForeignKey(Airplane, on_delete=models.CASCADE)
+    days_of_week = ArrayField(models.IntegerField())
+    scheduled_time = models.TimeField()
+    duration = models.DurationField()
+
+    class Meta:
+        db_table = 'routes'
+
+    def __str__(self):
+        return f"{self.route_no}: {self.departure_airport} → {self.arrival_airport}"
