@@ -159,3 +159,18 @@ class Segment(models.Model):
 
     def __str__(self):
         return f"{self.ticket.ticket_no} - Flight {self.flight.flight_id}"
+
+class BoardingPass(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, db_column='ticket_no', to_field='ticket_no')
+    flight = models.ForeignKey(Flight, on_delete=models.CASCADE, db_column='flight_id')
+    seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
+    boarding_no = models.IntegerField(null=True, blank=True)
+    boarding_time = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'boarding_passes'
+        unique_together = (('ticket', 'flight'),)
+        verbose_name_plural = "Boarding Passes"
+
+    def __str__(self):
+        return f"BP {self.boarding_no} - {self.ticket.ticket_no}"
