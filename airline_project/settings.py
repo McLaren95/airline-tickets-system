@@ -27,8 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.postgres',  # Для работы с PostgreSQL-specific полями
-    'airline_app',  # Ваше приложение - ДОБАВЬТЕ ЭТУ СТРОЧКУ!
+    'django.contrib.postgres',
+    'airline_app',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +46,7 @@ ROOT_URLCONF = 'airline_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Добавим папку для шаблонов
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -98,9 +98,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'ru-ru'  # Изменил на русский
+LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'Europe/Moscow'  # Изменил на московское время
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -111,13 +111,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # Добавим папку для статических файлов
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = '/profile'    # После входа → /profile
-LOGOUT_REDIRECT_URL = '/'          # После выхода → главная
-LOGIN_URL = '/login'               # Если не авторизован → /login
+LOGIN_REDIRECT_URL = '/profile'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/login'
+
+YANDEX_DISK_TOKEN = 'y0__xDegqCZAxjGrDwg54K81xVH6EMdOZEjMbXeLcZKC1-R9gVcPQ'
