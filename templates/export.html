@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Выгрузка данных</title>
+    <meta charset="UTF-8">
+    <style>
+        .export-section {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h2>Выгрузка данных из базы</h2>
+
+    <div class="export-section">
+        <h3>Все рейсы</h3>
+        <p>Полная выгрузка всех рейсов из базы данных</p>
+        <a href="{% url 'export_flights_csv' %}" class="btn">CSV (Excel)</a>
+        <a href="{% url 'export_flights_json' %}" class="btn">JSON</a>
+    </div>
+
+    <div class="export-section">
+        <h3>Ближайшие рейсы (7 дней)</h3>
+        <p>Рейсы, запланированные на ближайшую неделю</p>
+        <a href="{% url 'export_upcoming_flights_csv' %}" class="btn">CSV (Excel)</a>
+        <a href="{% url 'export_upcoming_flights_json' %}" class="btn">JSON</a>
+    </div>
+
+    <hr>
+    <a href="/">На главную</a>
+</body>
+</html>

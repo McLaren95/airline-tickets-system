@@ -8,4 +8,9 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='logout'),
     path('register/', views.register, name='register'),
     path('profile/', views.profile, name='profile'),
+    path('export/', views.export_page, name='export_page'),
+    path('export/flights/csv/', views.export_flights_csv, name='export_flights_csv'),
+    path('export/flights/json/', views.export_flights_json, name='export_flights_json'),
+    path('export/flights/upcoming/csv/', views.export_upcoming_flights_csv, name='export_upcoming_flights_csv'),
+    path('export/flights/upcoming/json/', views.export_upcoming_flights_json, name='export_upcoming_flights_json'),
 ]
