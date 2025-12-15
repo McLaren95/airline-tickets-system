@@ -7,7 +7,17 @@
 <body>
     <h2>Личный кабинет</h2>
     <p>Добро пожаловать, {{ user.username }}!</p>
-    <p>Ваши бронирования будут отображаться здесь.</p>
+
+    {% if user.is_superuser %}
+        <p><strong>Роль: Супер администратор</strong></p>
+        <a href="/admin/">Панель администратора</a> |
+    {% elif user.groups.all.0.name == "Managers" %}
+        <p><strong>Роль: Менеджер</strong></p>
+        <a href="/admin/">Панель управления</a> |
+    {% else %}
+        <p><strong>Роль: Клиент</strong></p>
+    {% endif %}
+
     <a href="{% url 'logout' %}">Выйти</a>
 </body>
 </html>
