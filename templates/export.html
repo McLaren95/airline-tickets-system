@@ -1,48 +1,49 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <title>Выгрузка данных</title>
-    <meta charset="UTF-8">
-    <style>
-        .export-section {
-            background: #f9f9f9;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
-            border-left: 4px solid #007bff;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 15px;
-            margin: 5px;
-            background: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 3px;
-        }
-        .btn:hover {
-            background: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <h2>Выгрузка данных из базы</h2>
+{% extends 'base.html' %}
+{% load static %}
 
-    <div class="export-section">
-        <h3>Все рейсы</h3>
-        <p>Полная выгрузка всех рейсов из базы данных</p>
-        <a href="{% url 'export_flights_csv' %}" class="btn">CSV (Excel)</a>
-        <a href="{% url 'export_flights_json' %}" class="btn">JSON</a>
+{% block title %}Экспорт данных - Admin Tools{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    <h1 style="margin-bottom: 30px;"><i class="fas fa-file-export"></i> Экспорт данных</h1>
+    <p style="margin-bottom: 30px; color: #666;">Скачивание отчетов в форматах CSV (Excel) и JSON для аналитики.</p>
+
+    <div class="card">
+        <div style="display: flex; align-items: flex-start; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-globe" style="font-size: 24px; color: #007bff;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h3>Полный реестр рейсов</h3>
+                <p style="color: #666;">Выгрузка всех рейсов, когда-либо существовавших в системе. Включает архивные данные.</p>
+                <div style="margin-top: 15px;">
+                    <a href="{% url 'export_flights_csv' %}" class="btn">
+                        <i class="fas fa-file-csv"></i> Скачать CSV
+                    </a>
+                    <a href="{% url 'export_flights_json' %}" class="btn btn-secondary">
+                        <i class="fas fa-code"></i> Скачать JSON
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 20px;">
+            <div style="background: #d4edda; padding: 15px; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-clock" style="font-size: 24px; color: #28a745;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h3>Оперативные рейсы (7 дней)</h3>
+                <p style="color: #666;">Только рейсы на ближайшую неделю. Используется для формирования расписания табло.</p>
+                <div style="margin-top: 15px;">
+                    <a href="{% url 'export_upcoming_flights_csv' %}" class="btn" style="background: #28a745;">
+                        <i class="fas fa-file-csv"></i> Скачать CSV
+                    </a>
+                    <a href="{% url 'export_upcoming_flights_json' %}" class="btn btn-secondary">
+                        <i class="fas fa-code"></i> Скачать JSON
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="export-section">
-        <h3>Ближайшие рейсы (7 дней)</h3>
-        <p>Рейсы, запланированные на ближайшую неделю</p>
-        <a href="{% url 'export_upcoming_flights_csv' %}" class="btn">CSV (Excel)</a>
-        <a href="{% url 'export_upcoming_flights_json' %}" class="btn">JSON</a>
-    </div>
-
-    <hr>
-    <a href="/">На главную</a>
-</body>
-</html>
+</div>
+{% endblock %}

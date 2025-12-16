@@ -54,6 +54,7 @@ class Booking(models.Model):
     book_date = models.DateTimeField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
+    is_paid = models.BooleanField(default=False, verbose_name="Оплачено")
 
     class Meta:
         db_table = 'bookings'
@@ -174,3 +175,20 @@ class BoardingPass(models.Model):
 
     def __str__(self):
         return f"BP {self.boarding_no} - {self.ticket.ticket_no}"
+
+class Payment(models.Model):
+    payment_id = models.CharField(max_length=32, primary_key=True, verbose_name="ID транзакции")
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, verbose_name="Бронирование")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Сумма")
+    payment_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата оплаты")
+    payment_method = models.CharField(max_length=50, default='Bank Card', verbose_name="Способ оплаты")
+
+    status = models.CharField(max_length=20, default='Succeeded')
+
+    class Meta:
+        db_table = 'payments'
+        verbose_name = 'Платеж'
+        verbose_name_plural = 'Платежи'
+
+    def __str__(self):
+        return f"Payment {self.payment_id} for Booking {self.booking.book_ref}"

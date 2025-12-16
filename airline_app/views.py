@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.models import Group
@@ -9,8 +9,10 @@ from django.utils import timezone
 import csv
 import json
 from django.http import HttpResponse, JsonResponse
-from .models import Flight, Booking, Ticket, Segment
+from .models import Flight, Booking, Ticket, Segment, Airport, Payment
 from django.db import models
+import re
+import uuid
 
 def custom_logout(request):
     logout(request)
@@ -34,11 +36,20 @@ def register(request):
 
 @login_required
 def profile(request):
+    if request.user.is_staff or request.user.groups.filter(name='Managers').exists():
+        return redirect('/admin/')
     return render(request, 'profile.html')
 
+def is_manager_or_staff(user):
+    return user.is_staff or user.groups.filter(name='Managers').exists()
+
+@login_required
+@user_passes_test(is_manager_or_staff)
 def export_page(request):
     return render(request, 'export.html')
 
+@login_required
+@user_passes_test(is_manager_or_staff)
 def export_flights_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="flights.csv"'
@@ -62,6 +73,8 @@ def export_flights_csv(request):
 
     return response
 
+@login_required
+@user_passes_test(is_manager_or_staff)
 def export_flights_json(request):
     flights = Flight.objects.select_related('route__departure_airport', 'route__arrival_airport').all()
 
@@ -80,7 +93,8 @@ def export_flights_json(request):
 
     return JsonResponse(data, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 2})
 
-
+@login_required
+@user_passes_test(is_manager_or_staff)
 def export_upcoming_flights_csv(request):
     from datetime import date, timedelta
 
@@ -113,7 +127,8 @@ def export_upcoming_flights_csv(request):
 
     return response
 
-
+@login_required
+@user_passes_test(is_manager_or_staff)
 def export_upcoming_flights_json(request):
     from datetime import date, timedelta
 
@@ -146,7 +161,6 @@ def export_upcoming_flights_json(request):
         'flights': data
     }, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 2})
 
-
 def flight_search(request):
     flights = Flight.objects.select_related(
         'route__departure_airport',
@@ -154,22 +168,28 @@ def flight_search(request):
         'route__airplane'
     ).all()
 
-    departure_query = request.GET.get('departure', '').strip().lower()
-    arrival_query = request.GET.get('arrival', '').strip().lower()
+    departure_query = request.GET.get('departure', '').strip()
+    arrival_query = request.GET.get('arrival', '').strip()
     date_str = request.GET.get('date')
 
+    def extract_code(query):
+        match = re.search(r'\(([A-Z0-9]{3})\)$', query)
+        if match:
+            return match.group(1)
+        return query
+
     if departure_query:
+        clean_dep = extract_code(departure_query)
         flights = flights.filter(
-            models.Q(route__departure_airport__airport_code__icontains=departure_query.upper()) |
-            models.Q(route__departure_airport__city__icontains=departure_query.capitalize()) |
-            models.Q(route__departure_airport__city__icontains=departure_query)
+            models.Q(route__departure_airport__airport_code__icontains=clean_dep) |
+            models.Q(route__departure_airport__city__icontains=clean_dep)
         )
 
     if arrival_query:
+        clean_arr = extract_code(arrival_query)
         flights = flights.filter(
-            models.Q(route__arrival_airport__airport_code__icontains=arrival_query.upper()) |
-            models.Q(route__arrival_airport__city__icontains=arrival_query.capitalize()) |
-            models.Q(route__arrival_airport__city__icontains=arrival_query)
+            models.Q(route__arrival_airport__airport_code__icontains=clean_arr) |
+            models.Q(route__arrival_airport__city__icontains=clean_arr)
         )
 
     if date_str:
@@ -183,6 +203,7 @@ def flight_search(request):
     flights = flights.order_by('scheduled_departure')
 
     return render(request, 'flight_search.html', {'flights': flights})
+
 
 
 @login_required
@@ -236,7 +257,46 @@ def payment_page(request, book_ref):
     booking = get_object_or_404(Booking, book_ref=book_ref, user=request.user)
     return render(request, 'payment.html', {'booking': booking})
 
+
 def payment_success(request, book_ref):
     booking = get_object_or_404(Booking, book_ref=book_ref)
-    messages.success(request, f'Бронирование {book_ref} успешно оплачено!')
+
+    if not booking.is_paid:
+        booking.is_paid = True
+        booking.save()
+
+        transaction_id = str(uuid.uuid4()).replace('-', '')[:16].upper()
+
+        Payment.objects.create(
+            payment_id=transaction_id,
+            booking=booking,
+            amount=booking.total_amount,
+            payment_method='Bank Card (Test)'
+        )
+
+        messages.success(request, f'Оплата прошла успешно! Транзакция №{transaction_id}')
+    else:
+        messages.info(request, 'Этот заказ уже был оплачен ранее.')
+
     return redirect('profile')
+
+def airport_autocomplete(request):
+    term = request.GET.get('term', '').lower()
+    if len(term) < 2:
+        return JsonResponse([], safe=False)
+
+    airports = Airport.objects.filter(
+        models.Q(airport_code__icontains=term) |
+        models.Q(city__icontains=term)
+    )[:10]
+
+    results = []
+    for airport in airports:
+        city_name = airport.city.get('ru', airport.city.get('en', ''))
+        results.append({
+            'label': f"{city_name} ({airport.airport_code})",
+            'value': airport.airport_code
+        })
+
+    return JsonResponse(results, safe=False)
+

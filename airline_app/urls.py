@@ -17,4 +17,5 @@ urlpatterns = [
     path('book/<int:flight_id>/', views.book_flight, name='book_flight'),
     path('payment/<str:book_ref>/', views.payment_page, name='payment_page'),
     path('payment/success/<str:book_ref>/', views.payment_success, name='payment_success'),
+    path('api/airports/', views.airport_autocomplete, name='airport_autocomplete'),
 ]
