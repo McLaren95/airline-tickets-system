@@ -188,7 +188,7 @@ class Payment(models.Model):
     class Meta:
         db_table = 'payments'
         verbose_name = 'Платеж'
-        verbose_name_plural = 'Платежи'
+        verbose_name_plural = 'Payment'
 
     def __str__(self):
         return f"Payment {self.payment_id} for Booking {self.booking.book_ref}"
