@@ -8,6 +8,7 @@ import csv
 import json
 from django.http import HttpResponse, JsonResponse
 from .models import Flight
+from django.db import models
 
 def custom_logout(request):
     logout(request)
@@ -142,3 +143,45 @@ def export_upcoming_flights_json(request):
         'total_flights': len(data),
         'flights': data
     }, safe=False, json_dumps_params={'ensure_ascii': False, 'indent': 2})
+
+
+def flight_search(request):
+    flights = Flight.objects.select_related(
+        'route__departure_airport',
+        'route__arrival_airport',
+        'route__airplane'
+    ).all()
+
+    departure_query = request.GET.get('departure', '').strip().lower()
+    arrival_query = request.GET.get('arrival', '').strip().lower()
+    date_str = request.GET.get('date')
+
+    if departure_query:
+        flights = flights.filter(
+            models.Q(route__departure_airport__airport_code__icontains=departure_query.upper()) |
+            models.Q(route__departure_airport__city__icontains=departure_query.capitalize()) |
+            models.Q(route__departure_airport__city__icontains=departure_query)
+        )
+
+    if arrival_query:
+        flights = flights.filter(
+            models.Q(route__arrival_airport__airport_code__icontains=arrival_query.upper()) |
+            models.Q(route__arrival_airport__city__icontains=arrival_query.capitalize()) |
+            models.Q(route__arrival_airport__city__icontains=arrival_query)
+        )
+
+    if date_str:
+        try:
+            from datetime import datetime
+            search_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            flights = flights.filter(scheduled_departure__date=search_date)
+        except ValueError:
+            pass
+
+    flights = flights.order_by('scheduled_departure')
+
+    return render(request, 'flight_search.html', {'flights': flights})
+
+
+def book_flight(request, flight_id):
+    return render(request, 'book_flight.html', {'flight_id': flight_id})

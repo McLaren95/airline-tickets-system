@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Авиабилеты{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h2><i class="fas fa-plane"></i> SkyTickets</h2>
+            </div>
+
+            <div class="nav-links">
+                <a href="{% url 'home' %}"><i class="fas fa-home"></i> Главная</a>
+                <a href="{% url 'flight_search' %}"><i class="fas fa-search"></i> Поиск рейсов</a>
+                <a href="{% url 'export_page' %}"><i class="fas fa-download"></i> Выгрузка</a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Личный кабинет</a>
+                    {% if user.is_staff %}
+                        <a href="/admin/" target="_blank"><i class="fas fa-cog"></i> Админка</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                    <span>Привет, <strong>{{ user.username }}</strong>!</span>
+                    <a href="{% url 'logout' %}" class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i> Выйти
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-secondary">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </a>
+                    <a href="{% url 'register' %}" class="btn">
+                        <i class="fas fa-user-plus"></i> Регистрация
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Система продажи авиабилетов. Курсовой проект.</p>
+            <p>Разработано на Django + PostgreSQL</p>
+        </div>
+    </footer>
+
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

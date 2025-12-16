@@ -13,4 +13,6 @@ urlpatterns = [
     path('export/flights/json/', views.export_flights_json, name='export_flights_json'),
     path('export/flights/upcoming/csv/', views.export_upcoming_flights_csv, name='export_upcoming_flights_csv'),
     path('export/flights/upcoming/json/', views.export_upcoming_flights_json, name='export_upcoming_flights_json'),
+    path('flights/', views.flight_search, name='flight_search'),
+    path('book/<int:flight_id>/', views.book_flight, name='book_flight'),
 ]
