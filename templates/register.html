@@ -1,16 +1,44 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <title>Регистрация</title>
-    <meta charset="UTF-8">
-</head>
-<body>
-    <h2>Регистрация в системе авиабилетов</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Зарегистрироваться</button>
-    </form>
-    <p>Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация - SkyTickets{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card" style="max-width: 500px; margin: 0 auto;">
+        <h2 style="text-align: center; margin-bottom: 30px;">
+            <i class="fas fa-user-plus"></i> Регистрация
+        </h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: #666;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div style="color: #dc3545; font-size: 0.9rem; margin-top: 5px;">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+                <i class="fas fa-user-plus"></i> Зарегистрироваться
+            </button>
+        </form>
+        
+        <hr style="margin: 30px 0;">
+        
+        <p style="text-align: center;">
+            Уже есть аккаунт? 
+            <a href="{% url 'login' %}">Войти</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

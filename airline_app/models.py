@@ -106,13 +106,13 @@ class Flight(models.Model):
     CANCELLED = 'Cancelled'
 
     STATUS_CHOICES = [
-        (SCHEDULED, 'Scheduled'),
-        (ON_TIME, 'On Time'),
-        (DELAYED, 'Delayed'),
-        (BOARDING, 'Boarding'),
-        (DEPARTED, 'Departed'),
-        (ARRIVED, 'Arrived'),
-        (CANCELLED, 'Cancelled'),
+        (SCHEDULED, 'Запланирован'),
+        (ON_TIME, 'По расписанию'),
+        (DELAYED, 'Задерживается'),
+        (BOARDING, 'Посадка'),
+        (DEPARTED, 'Вылетел'),
+        (ARRIVED, 'Прибыл'),
+        (CANCELLED, 'Отменен'),
     ]
 
     flight_id = models.AutoField(primary_key=True)

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Бронирование рейса - AirLines{% endblock %}
+
+{% block content %}
+<div class="booking-container">
+    <h1><i class="fas fa-ticket-alt"></i> Бронирование рейса</h1>
+
+    <div class="card" style="background: #e7f3ff; border-left: 4px solid #007bff;">
+        <h3>Информация о рейсе</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 15px;">
+            <div>
+                <strong>Маршрут:</strong><br>
+                Москва (SVO) → Санкт-Петербург (LED)
+            </div>
+            <div>
+                <strong>Вылет:</strong><br>
+                18.12.2025 08:00
+            </div>
+            <div>
+                <strong>Прилет:</strong><br>
+                18.12.2025 09:30
+            </div>
+            <div>
+                <strong>Цена:</strong><br>
+                <span style="font-size: 1.5rem; color: #28a745; font-weight: bold;">5 500 ₽</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Данные пассажира</h3>
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="passenger_name">ФИО пассажира *</label>
+                    <input type="text" id="passenger_name" name="passenger_name" class="form-control" 
+                           value="{{ user.get_full_name|default:'' }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="passenger_id">Номер документа *</label>
+                    <input type="text" id="passenger_id" name="passenger_id" class="form-control" 
+                           placeholder="Паспорт или ID-карта" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="seat">Выбор места</label>
+                    <select id="seat" name="seat" class="form-control">
+                        <option value="10A">10A (Эконом) - 5 500 ₽</option>
+                        <option value="10B">10B (Эконом) - 5 500 ₽</option>
+                        <option value="1A">1A (Бизнес) - 15 000 ₽</option>
+                        <option value="1B">1B (Бизнес) - 15 000 ₽</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fare_conditions">Класс обслуживания</label>
+                    <select id="fare_conditions" name="fare_conditions" class="form-control">
+                        <option value="Economy">Эконом - 5 500 ₽</option>
+                        <option value="Comfort">Комфорт - 8 500 ₽</option>
+                        <option value="Business">Бизнес - 15 000 ₽</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="terms" required>
+                    Я согласен с <a href="#">правилами перевозки</a> и 
+                    <a href="#">политикой конфиденциальности</a> *
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 20px; margin-top: 30px;">
+                <a href="{% url 'flight_search' %}" class="btn btn-secondary" style="flex: 1;">
+                    <i class="fas fa-arrow-left"></i> Назад к поиску
+                </a>
+                <button type="submit" class="btn" style="flex: 2;">
+                    <i class="fas fa-credit-card"></i> Перейти к оплате
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.booking-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+</style>
+
+<script>
+document.getElementById('fare_conditions').addEventListener('change', function() {
+    const prices = {
+        'Economy': '5 500 ₽',
+        'Comfort': '8 500 ₽', 
+        'Business': '15 000 ₽'
+    };
+    document.querySelector('.price').textContent = prices[this.value];
+});
+</script>
+{% endblock %}
