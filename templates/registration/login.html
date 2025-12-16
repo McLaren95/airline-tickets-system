@@ -1,16 +1,38 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <title>Вход в систему</title>
-    <meta charset="UTF-8">
-</head>
-<body>
-    <h2>Вход в систему авиабилетов</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Войти</button>
-    </form>
-    <p>Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a></p>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Вход - AirLines{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card" style="max-width: 400px; margin: 50px auto;">
+        <h2 style="text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-sign-in-alt"></i> Вход
+        </h2>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="alert alert-error">Неверный логин или пароль</div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="id_username">Логин:</label>
+                <input type="text" name="username" class="form-control" required id="id_username">
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Пароль:</label>
+                <input type="password" name="password" class="form-control" required id="id_password">
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Войти</button>
+        </form>
+
+        <hr style="margin: 20px 0;">
+        <p style="text-align: center;">
+            Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

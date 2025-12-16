@@ -4,10 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.models import Group
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 import csv
 import json
 from django.http import HttpResponse, JsonResponse
-from .models import Flight
+from .models import Flight, Booking, Ticket, Segment
 from django.db import models
 
 def custom_logout(request):
@@ -183,5 +185,58 @@ def flight_search(request):
     return render(request, 'flight_search.html', {'flights': flights})
 
 
+@login_required
 def book_flight(request, flight_id):
-    return render(request, 'book_flight.html', {'flight_id': flight_id})
+    flight = get_object_or_404(Flight, pk=flight_id)
+
+    base_price = 5500
+
+    if request.method == 'POST':
+        import random
+        import string
+
+        book_ref = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+        passenger_name = request.POST.get('passenger_name')
+        passenger_id = request.POST.get('passenger_id')
+        fare_conditions = request.POST.get('fare_conditions')
+        seat_selected = request.POST.get('seat')
+
+        total_amount = base_price
+        if fare_conditions == 'Business':
+            total_amount *= 3
+        elif fare_conditions == 'Comfort':
+            total_amount *= 1.5
+
+        booking = Booking.objects.create(
+            book_ref=book_ref,
+            book_date=timezone.now(),
+            total_amount=total_amount,
+            user=request.user
+        )
+
+        ticket_no = ''.join(random.choices(string.digits, k=13))
+        Ticket.objects.create(
+            ticket_no=ticket_no,
+            booking=booking,
+            passenger_id=passenger_id,
+            passenger_name=passenger_name,
+            outbound=True  # или логика туда-обратно
+        )
+
+        return redirect('payment_page', book_ref=book_ref)
+
+    context = {
+        'flight': flight,
+        'base_price': base_price,
+    }
+    return render(request, 'book_flight.html', context)
+
+def payment_page(request, book_ref):
+    booking = get_object_or_404(Booking, book_ref=book_ref, user=request.user)
+    return render(request, 'payment.html', {'booking': booking})
+
+def payment_success(request, book_ref):
+    booking = get_object_or_404(Booking, book_ref=book_ref)
+    messages.success(request, f'Бронирование {book_ref} успешно оплачено!')
+    return redirect('profile')

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 50px auto; text-align: center;">
+    <h2><i class="fas fa-credit-card"></i> Оплата заказа {{ booking.book_ref }}</h2>
+    <p>Сумма к оплате: <strong>{{ booking.total_amount }} ₽</strong></p>
+    
+    <div id="payment-form">
+        <p>Введите данные карты (тестовый режим)</p>
+        <input type="text" class="form-control" placeholder="0000 0000 0000 0000" style="margin-bottom: 10px;">
+        <div style="display: flex; gap: 10px;">
+            <input type="text" class="form-control" placeholder="MM/YY">
+            <input type="text" class="form-control" placeholder="CVC">
+        </div>
+        <button onclick="processPayment()" class="btn" style="width: 100%; margin-top: 20px; background: #6f42c1;">
+            Оплатить
+        </button>
+    </div>
+
+    <div id="loader" style="display: none; padding: 40px;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #007bff;"></i>
+        <p style="margin-top: 15px;">Связь с банком...</p>
+    </div>
+</div>
+
+<script>
+    function processPayment() {
+        document.getElementById('payment-form').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
+
+        setTimeout(function() {
+            window.location.href = "{% url 'payment_success' booking.book_ref %}";
+        }, 2000);
+    }
+</script>
+{% endblock %}
