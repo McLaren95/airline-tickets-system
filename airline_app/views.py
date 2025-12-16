@@ -222,9 +222,9 @@ def book_flight(request, flight_id):
 
                 price = base_price
                 if fare_conditions == 'Business':
-                    price *= 3
+                    price = int(base_price * 3)
                 elif fare_conditions == 'Comfort':
-                    price *= 1.5
+                    price = int(base_price * 1.5)
 
                 book_ref = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
                 booking = Booking.objects.create(
@@ -252,32 +252,36 @@ def book_flight(request, flight_id):
                 )
 
                 airplane = flight.route.airplane
-                available_seats = Seat.objects.filter(
+
+                occupied_seat_ids = BoardingPass.objects.filter(flight=flight).values_list('seat_id', flat=True)
+
+                available_seats_qs = Seat.objects.filter(
                     airplane=airplane,
                     fare_conditions=fare_conditions
+                ).exclude(id__in=occupied_seat_ids)
+
+                if not available_seats_qs.exists():
+                    raise Exception(f"Нет свободных мест класса {fare_conditions}!")
+
+                assigned_seat = random.choice(list(available_seats_qs))
+
+                b_time = flight.scheduled_departure - timedelta(minutes=40)
+
+                BoardingPass.objects.create(
+                    ticket=ticket,
+                    flight=flight,
+                    seat=assigned_seat,
+                    boarding_no=random.randint(1, 200),
+                    boarding_time=b_time
                 )
-
-                if available_seats.exists():
-                    assigned_seat = random.choice(available_seats)
-
-                    b_time = flight.scheduled_departure - timedelta(minutes=40)
-
-                    BoardingPass.objects.create(
-                        ticket=ticket,
-                        flight=flight,
-                        seat=assigned_seat,
-                        boarding_no=random.randint(1, 200),
-                        boarding_time=b_time
-                    )
 
                 return redirect('payment_page', book_ref=book_ref)
 
         except Exception as e:
-            print(f"Error: {e}")
-            messages.error(request, "Ошибка при бронировании.")
+            messages.error(request, f"Ошибка при бронировании: {e}")
+            return redirect('book_flight', flight_id=flight_id)
 
     return render(request, 'book_flight.html', {'flight': flight, 'base_price': base_price})
-
 def payment_page(request, book_ref):
     booking = get_object_or_404(Booking, book_ref=book_ref, user=request.user)
     return render(request, 'payment.html', {'booking': booking})

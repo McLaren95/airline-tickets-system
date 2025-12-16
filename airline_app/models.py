@@ -127,6 +127,14 @@ class Flight(models.Model):
     def __str__(self):
         return f"{self.route.route_no} - {self.scheduled_departure.date()}"
 
+    @property
+    def free_seats_count(self):
+        total_seats = Seat.objects.filter(airplane=self.route.airplane).count()
+
+        occupied_seats = BoardingPass.objects.filter(flight=self).count()
+
+        return total_seats - occupied_seats
+
     def clean(self):
         if self.scheduled_arrival <= self.scheduled_departure:
             raise ValidationError("Scheduled arrival must be after departure.")

@@ -64,7 +64,6 @@
                                     <span style="background: white; padding: 0 10px; position: relative; z-index: 1; font-size: 0.85rem; color: #777;">
                                         {{ flight.route.duration }}
                                     </span>
-
                                 </div>
 
                                 <h2 style="margin: 0; color: #0056b3; font-size: 2rem;">
@@ -105,18 +104,33 @@
                             </div>
 
                             <div>
-                                <div style="font-size: 1.8rem; font-weight: bold; color: #28a745; margin-bottom: 15px;">
+                                <div style="font-size: 1.8rem; font-weight: bold; color: #28a745; margin-bottom: 5px;">
                                     от 5 500 ₽
                                 </div>
 
-                                {% if user.is_authenticated %}
-                                    <a href="{% url 'book_flight' flight.flight_id %}" class="btn" style="width: 90%; display: block; text-align: center;">
-                                        Купить билет
-                                    </a>
+                                {% if flight.free_seats_count > 0 %}
+                                    <div style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
+                                        <i class="fas fa-chair"></i> Мест свободно: <strong>{{ flight.free_seats_count }}</strong>
+                                    </div>
+
+                                    {% if user.is_authenticated %}
+                                        <a href="{% url 'book_flight' flight.flight_id %}" class="btn" style="width: 90%; display: block; text-align: center;">
+                                            Купить билет
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'login' %}?next={% url 'book_flight' flight.flight_id %}" class="btn btn-secondary" style="width: 90%; display: block; text-align: center;">
+                                            Войти
+                                        </a>
+                                    {% endif %}
+
                                 {% else %}
-                                    <a href="{% url 'login' %}?next={% url 'book_flight' flight.flight_id %}" class="btn btn-secondary" style="width: 90%; display: block; text-align: center;">
-                                        Войти
-                                    </a>
+                                    <div style="font-size: 0.9rem; color: #dc3545; margin-bottom: 15px;">
+                                        <i class="fas fa-times-circle"></i> Мест нет
+                                    </div>
+
+                                    <button class="btn" disabled style="width: 100%; display: block; text-align: center; background-color: #6c757d; cursor: not-allowed; opacity: 0.7;">
+                                        Места закончились
+                                    </button>
                                 {% endif %}
                             </div>
                         </div>
