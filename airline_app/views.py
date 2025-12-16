@@ -1,18 +1,22 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.models import Group
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db import transaction
+from django.db import models
+from datetime import timedelta
+from django.db.models import Q
 import csv
 import json
 from django.http import HttpResponse, JsonResponse
-from .models import Flight, Booking, Ticket, Segment, Airport, Payment
-from django.db import models
+from .models import Flight, Booking, Ticket, Segment, Airport, Payment, Seat, BoardingPass
 import re
 import uuid
+import random
+import string
 
 def custom_logout(request):
     logout(request)
@@ -166,7 +170,7 @@ def flight_search(request):
         'route__departure_airport',
         'route__arrival_airport',
         'route__airplane'
-    ).all()
+    ).filter(scheduled_departure__gte=timezone.now())
 
     departure_query = request.GET.get('departure', '').strip()
     arrival_query = request.GET.get('arrival', '').strip()
@@ -181,22 +185,21 @@ def flight_search(request):
     if departure_query:
         clean_dep = extract_code(departure_query)
         flights = flights.filter(
-            models.Q(route__departure_airport__airport_code__icontains=clean_dep) |
-            models.Q(route__departure_airport__city__icontains=clean_dep)
+            Q(route__departure_airport__airport_code__icontains=clean_dep) |
+            Q(route__departure_airport__city__icontains=clean_dep)
         )
 
     if arrival_query:
         clean_arr = extract_code(arrival_query)
         flights = flights.filter(
-            models.Q(route__arrival_airport__airport_code__icontains=clean_arr) |
-            models.Q(route__arrival_airport__city__icontains=clean_arr)
+            Q(route__arrival_airport__airport_code__icontains=clean_arr) |
+            Q(route__arrival_airport__city__icontains=clean_arr)
         )
 
     if date_str:
         try:
-            from datetime import datetime
-            search_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            flights = flights.filter(scheduled_departure__date=search_date)
+            # Тут фильтруем конкретно по дню
+            flights = flights.filter(scheduled_departure__date=date_str)
         except ValueError:
             pass
 
@@ -205,53 +208,75 @@ def flight_search(request):
     return render(request, 'flight_search.html', {'flights': flights})
 
 
-
 @login_required
 def book_flight(request, flight_id):
     flight = get_object_or_404(Flight, pk=flight_id)
-
     base_price = 5500
 
     if request.method == 'POST':
-        import random
-        import string
+        try:
+            with transaction.atomic():
+                passenger_name = request.POST.get('passenger_name')
+                passenger_id = request.POST.get('passenger_id')
+                fare_conditions = request.POST.get('fare_conditions')
 
-        book_ref = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+                price = base_price
+                if fare_conditions == 'Business':
+                    price *= 3
+                elif fare_conditions == 'Comfort':
+                    price *= 1.5
 
-        passenger_name = request.POST.get('passenger_name')
-        passenger_id = request.POST.get('passenger_id')
-        fare_conditions = request.POST.get('fare_conditions')
-        seat_selected = request.POST.get('seat')
+                book_ref = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+                booking = Booking.objects.create(
+                    book_ref=book_ref,
+                    book_date=timezone.now(),
+                    total_amount=price,
+                    user=request.user,
+                    is_paid=False
+                )
 
-        total_amount = base_price
-        if fare_conditions == 'Business':
-            total_amount *= 3
-        elif fare_conditions == 'Comfort':
-            total_amount *= 1.5
+                ticket_no = ''.join(random.choices(string.digits, k=13))
+                ticket = Ticket.objects.create(
+                    ticket_no=ticket_no,
+                    booking=booking,
+                    passenger_id=passenger_id,
+                    passenger_name=passenger_name,
+                    outbound=True
+                )
 
-        booking = Booking.objects.create(
-            book_ref=book_ref,
-            book_date=timezone.now(),
-            total_amount=total_amount,
-            user=request.user
-        )
+                Segment.objects.create(
+                    ticket=ticket,
+                    flight=flight,
+                    fare_conditions=fare_conditions,
+                    price=price
+                )
 
-        ticket_no = ''.join(random.choices(string.digits, k=13))
-        Ticket.objects.create(
-            ticket_no=ticket_no,
-            booking=booking,
-            passenger_id=passenger_id,
-            passenger_name=passenger_name,
-            outbound=True  # или логика туда-обратно
-        )
+                airplane = flight.route.airplane
+                available_seats = Seat.objects.filter(
+                    airplane=airplane,
+                    fare_conditions=fare_conditions
+                )
 
-        return redirect('payment_page', book_ref=book_ref)
+                if available_seats.exists():
+                    assigned_seat = random.choice(available_seats)
 
-    context = {
-        'flight': flight,
-        'base_price': base_price,
-    }
-    return render(request, 'book_flight.html', context)
+                    b_time = flight.scheduled_departure - timedelta(minutes=40)
+
+                    BoardingPass.objects.create(
+                        ticket=ticket,
+                        flight=flight,
+                        seat=assigned_seat,
+                        boarding_no=random.randint(1, 200),
+                        boarding_time=b_time
+                    )
+
+                return redirect('payment_page', book_ref=book_ref)
+
+        except Exception as e:
+            print(f"Error: {e}")
+            messages.error(request, "Ошибка при бронировании.")
+
+    return render(request, 'book_flight.html', {'flight': flight, 'base_price': base_price})
 
 def payment_page(request, book_ref):
     booking = get_object_or_404(Booking, book_ref=book_ref, user=request.user)

@@ -64,7 +64,7 @@
                                     <span style="background: white; padding: 0 10px; position: relative; z-index: 1; font-size: 0.85rem; color: #777;">
                                         {{ flight.route.duration }}
                                     </span>
-                                    <i class="fas fa-plane" style="position: absolute; right: -5px; top: 40%; transform: translateY(-50%) rotate(90deg); color: #ccc; font-size: 0.8rem;"></i>
+
                                 </div>
 
                                 <h2 style="margin: 0; color: #0056b3; font-size: 2rem;">
@@ -110,11 +110,11 @@
                                 </div>
 
                                 {% if user.is_authenticated %}
-                                    <a href="{% url 'book_flight' flight.flight_id %}" class="btn" style="width: 100%; display: block; text-align: center;">
+                                    <a href="{% url 'book_flight' flight.flight_id %}" class="btn" style="width: 90%; display: block; text-align: center;">
                                         Купить билет
                                     </a>
                                 {% else %}
-                                    <a href="{% url 'login' %}?next={% url 'book_flight' flight.flight_id %}" class="btn btn-secondary" style="width: 100%; display: block; text-align: center;">
+                                    <a href="{% url 'login' %}?next={% url 'book_flight' flight.flight_id %}" class="btn btn-secondary" style="width: 90%; display: block; text-align: center;">
                                         Войти
                                     </a>
                                 {% endif %}

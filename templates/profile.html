@@ -4,109 +4,155 @@
 {% block title %}Личный кабинет - AirLines{% endblock %}
 
 {% block content %}
-<h1><i class="fas fa-user"></i> Личный кабинет</h1>
+<div class="container" style="max-width: 1000px;">
+    <h1><i class="fas fa-user-circle"></i> Личный кабинет</h1>
 
-<div class="user-info-card card">
-    <h3><i class="fas fa-id-card"></i> Ваши данные</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-        <div>
-            <strong>Имя пользователя:</strong><br>
-            {{ user.username }}
-        </div>
-        <div>
-            <strong>Email:</strong><br>
-            {{ user.email|default:"Не указан" }}
-        </div>
-        <div>
-            <strong>Дата регистрации:</strong><br>
-            {{ user.date_joined|date:"d.m.Y" }}
+    <div class="card mb-4">
+        <h3><i class="fas fa-address-card"></i> Ваши данные</h3>
+        <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+            <div>
+                <small style="color: #666;">Логин</small><br>
+                <strong>{{ user.username }}</strong>
+            </div>
+            <div>
+                <small style="color: #666;">Email</small><br>
+                <strong>{{ user.email|default:"Не указан" }}</strong>
+            </div>
+            <div>
+                <small style="color: #666;">Дата регистрации</small><br>
+                <strong>{{ user.date_joined|date:"d.m.Y" }}</strong>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="card">
-    <h3><i class="fas fa-ticket-alt"></i> Ваши бронирования</h3>
+    <div class="card">
+        <h3><i class="fas fa-ticket-alt"></i> История поездок</h3>
 
-    {% if user.booking_set.all %}
-        {% for booking in user.booking_set.all %}
-            <div class="booking-card" style="border-left: 4px solid {% if booking.is_paid %}#28a745{% else %}#ffc107{% endif %}; padding: 15px; margin: 15px 0; background: #f8f9fa;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        {% if user.booking_set.all %}
+            {% for booking in user.booking_set.all|dictsortreversed:"book_date" %}
 
+            <div class="booking-wrapper" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 30px; overflow: hidden;">
+
+                <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                     <div>
-                        <h4 style="margin: 0;">Бронь №{{ booking.book_ref }}</h4>
-                        <p style="margin: 5px 0; font-size: 0.9rem; color: #555;">
-                            Дата оформления: {{ booking.book_date|date:"d.m.Y H:i" }}
-                        </p>
-                        <p style="margin: 5px 0; font-weight: bold;">
-                            Сумма: {{ booking.total_amount }} ₽
-                        </p>
-                    </div>
-
-                    <div style="text-align: right;">
-                        <span class="status-badge {% if booking.is_paid %}status-success{% else %}status-warning{% endif %}">
-                            {% if booking.is_paid %}
-                                <i class="fas fa-check-circle"></i> Оплачено
-                            {% else %}
-                                <i class="fas fa-hourglass-half"></i> Ожидает оплаты
-                            {% endif %}
+                        <strong>Бронь № {{ booking.book_ref }}</strong>
+                        <span style="color: #666; margin-left: 10px; font-size: 0.9rem;">
+                            от {{ booking.book_date|date:"d.m.Y" }}
                         </span>
-
-                        {% if not booking.is_paid %}
-                            <div style="margin-top: 10px;">
-                                <a href="{% url 'payment_page' booking.book_ref %}" class="btn" style="padding: 5px 10px; font-size: 0.9rem;">
-                                    Оплатить
-                                </a>
-                            </div>
+                    </div>
+                    <div>
+                        <span style="font-weight: bold; margin-right: 15px;">{{ booking.total_amount }} ₽</span>
+                        {% if booking.is_paid %}
+                            <span class="status-badge status-success"><i class="fas fa-check"></i> Оплачено</span>
+                        {% else %}
+                            <span class="status-badge status-warning">Ожидает оплаты</span>
+                            <a href="{% url 'payment_page' booking.book_ref %}" class="btn-sm btn-primary" style="margin-left: 10px; text-decoration: none;">Оплатить</a>
                         {% endif %}
                     </div>
                 </div>
 
-                <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
-
-                <div style="margin-top: 10px;">
-                    <strong style="font-size: 0.9rem;">Билеты:</strong>
+                <div style="padding: 20px;">
                     {% for ticket in booking.ticket_set.all %}
-                        <div style="background: white; padding: 10px; margin: 5px 0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 0.95rem;">
-                            <i class="fas fa-user"></i> <strong>{{ ticket.passenger_name }}</strong>
-                            <span style="color: #666;">(Документ: {{ ticket.passenger_id }})</span>
-                            <span style="float: right;">Билет № {{ ticket.ticket_no }}</span>
+                        {% with bp=ticket.boardingpass_set.first %}
+
+                        <div class="ticket-card" style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #eee;">
+
+                            {% if bp %}
+                            <div style="flex: 2; min-width: 300px;">
+                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                    <div>
+                                        <div style="font-size: 1.5rem; font-weight: bold; color: #0056b3;">
+                                            {{ bp.flight.scheduled_departure|date:"H:i" }}
+                                        </div>
+                                        <div style="color: #555;">
+                                            {{ bp.flight.route.departure_airport.city.ru|default:bp.flight.route.departure_airport.airport_code }}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #999;">
+                                            {{ bp.flight.scheduled_departure|date:"d.m.Y" }}
+                                        </div>
+                                    </div>
+
+                                    <div style="flex: 1; text-align: center; position: relative;">
+                                        <div style="border-top: 2px solid #ddd; width: 100%; position: absolute; top: 50%;"></div>
+                                        <span style="background: white; padding: 0 10px; position: relative; color: #777; font-size: 0.8rem;">
+                                            {{ bp.flight.route.duration }}
+                                        </span>
+                                    </div>
+
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 1.5rem; font-weight: bold; color: #0056b3;">
+                                            {{ bp.flight.scheduled_arrival|date:"H:i" }}
+                                        </div>
+                                        <div style="color: #555;">
+                                            {{ bp.flight.route.arrival_airport.city.ru|default:bp.flight.route.arrival_airport.airport_code }}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #999;">
+                                            {{ bp.flight.scheduled_arrival|date:"d.m.Y" }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: #e9f5ff; padding: 8px 12px; border-radius: 5px; font-size: 0.9rem; color: #444; display: inline-block;">
+                                    <i class="fas fa-plane"></i> <strong>Самолет:</strong> {{ bp.flight.route.airplane.model.en|default:bp.flight.route.airplane.model }}
+                                    <span style="margin: 0 10px; color: #ccc;">|</span>
+                                    <i class="fas fa-couch"></i> <strong>Класс:</strong> {{ bp.seat.fare_conditions }}
+                                </div>
+                            </div>
+
+                            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right;">
+                                <div style="margin-bottom: 15px;">
+                                    <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px;">Ваше место</div>
+                                    <div style="font-size: 2.5rem; line-height: 1; font-weight: bold; color: #28a745;">
+                                        {{ bp.seat.seat_no }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <small style="color: #666;">Билет: {{ ticket.ticket_no }}</small>
+                                </div>
+                            </div>
+
+                            {% else %}
+                            <div style="color: #dc3545; padding: 20px;">
+                                <i class="fas fa-exclamation-triangle"></i> Информация о посадочном талоне недоступна.
+                                <br><small>Возможно, при покупке не были сгенерированы места в самолете.</small>
+                            </div>
+                            {% endif %}
                         </div>
+
+                        {% if not forloop.last %}<div style="margin-bottom: 20px;"></div>{% endif %}
+
+                        {% endwith %}
                     {% endfor %}
                 </div>
             </div>
-        {% endfor %}
-    {% else %}
-        <div style="text-align: center; padding: 40px; color: #666;">
-            <i class="fas fa-ticket-alt" style="font-size: 3rem; margin-bottom: 20px; color: #ddd;"></i>
-            <h4>У вас пока нет бронирований</h4>
-            <p>Найдите и забронируйте свой первый рейс!</p>
-            <a href="{% url 'flight_search' %}" class="btn">
-                <i class="fas fa-search"></i> Найти рейсы
-            </a>
-        </div>
-    {% endif %}
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 50px; color: #666;">
+                <i class="fas fa-ticket-alt" style="font-size: 3rem; margin-bottom: 20px; color: #eee;"></i>
+                <h4>Бронирований пока нет</h4>
+                <a href="{% url 'flight_search' %}" class="btn" style="margin-top: 10px;">Найти рейс</a>
+            </div>
+        {% endif %}
+    </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <style>
     .status-badge {
-        display: inline-block;
-        padding: 6px 14px;
-        border-radius: 20px;
+        padding: 5px 12px;
+        border-radius: 15px;
         font-size: 0.85rem;
         font-weight: 600;
-        text-transform: uppercase;
     }
-    .status-success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+    .status-success { background: #d4edda; color: #155724; }
+    .status-warning { background: #fff3cd; color: #856404; }
+
+    .booking-wrapper {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
     }
-    .status-warning {
-        background: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeeba;
+    .booking-wrapper:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 </style>
 {% endblock %}
